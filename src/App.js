@@ -4,6 +4,7 @@ import './App.css';
 
 class App extends React.Component {
   state = {
+    textInput: '',
     username: '',
     userImg: '',
     name: '',
@@ -25,12 +26,11 @@ class App extends React.Component {
           id: resp.data.id
         })
       })
-      .catch(
-        console.error('error')
+      .catch(err =>
+        console.error(err)
       )
   }
   componentDidUpdate(prevProps, prevState) {
-    // console.log(prevState.username, this.state.username)
     if (this.state.username !== prevState.username) {
       axios.get(`https://api.github.com/users/${this.state.username}/followers`)
         .then(resp => {
@@ -38,19 +38,19 @@ class App extends React.Component {
             followers: resp.data
           })
         })
-        .catch(
-          console.error('error')
+        .catch(err =>
+          console.error(err)
         )
     }
-
   }
   handleSearch = (e) => {
     e.preventDefault();
-    this.state.username.length >= 1 && //Ensure something was typed
-      axios.get(`https://api.github.com/users/${this.state.username}`)
+    this.state.textInput.length >= 1 && //Ensure something was typed
+      axios.get(`https://api.github.com/users/${this.state.textInput}`)
         .then(resp => {
           this.setState({
-            username: '',//clear input afterward
+            textInput: '', //clear input afterward
+            username: resp.data.login,
             userImg: resp.data.avatar_url,
             name: resp.data.name,
             location: resp.data.location,
@@ -65,9 +65,7 @@ class App extends React.Component {
 
   handleInput = (e) => {
     this.setState({
-      ...this.state,
-      username: e.target.value
-
+      textInput: e.target.value
     });
   }
 
@@ -75,20 +73,20 @@ class App extends React.Component {
     return (
       <div className="App">
         <form>
-          <input value={this.state.username} onChange={this.handleInput} placeholder='search by username' />
+          <input value={this.state.textInput} onChange={this.handleInput} placeholder='search by username' />
           <button onClick={this.handleSearch}>Search User</button>
         </form>
         <header className="App-header">
           <h1>{this.state.name}</h1>
-          <a key={this.state.id} href={this.state.url} target='_blank' rel='noreferrer'><img src={this.state.userImg} alt={this.state.name} /></a>
+          <a href={this.state.url} target='_blank' rel='noreferrer'><img src={this.state.userImg} alt={this.state.name} /></a>
           <p>{this.state.location}</p>
 
           <h3> {`${this.state.name !== null ? this.state.name : ''} Has ${this.state.followers.length} Followers`} </h3>
           {this.state.followers.map(follower =>
-            <>
+            <div key={follower.id}>
               <h4>{follower.login}</h4>
-              <a key={follower.id} href={follower.html_url} target='_blank' rel='noreferrer'><img width='50%' src={follower.avatar_url} alt={follower.login} /></a>
-            </>
+              <a href={follower.html_url} target='_blank' rel='noreferrer'><img width='50%' src={follower.avatar_url} alt={follower.login} /></a>
+            </div>
           )}
         </header>
       </div>
